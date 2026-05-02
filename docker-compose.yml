@@ -1,23 +1,19 @@
-# version is now using "compose spec"
-# v2 and v3 are now combined!
-# docker-compose v1.27+ required
-
 services:
   vote:
-    build: 
-      context: ./vote
+    build:
+      context: src/vote
       target: dev
     depends_on:
       redis:
         condition: service_healthy
-    healthcheck: 
+    healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost"]
       interval: 15s
       timeout: 5s
       retries: 3
       start_period: 10s
     volumes:
-     - ./vote:/usr/local/app
+      - src/vote:/usr/local/app
     ports:
       - "8080:80"
     networks:
@@ -25,14 +21,14 @@ services:
       - back-tier
 
   result:
-    build: ./result
+    build: src/result
     # use nodemon rather than node for local dev
     entrypoint: nodemon --inspect=0.0.0.0 server.js
     depends_on:
       db:
-        condition: service_healthy 
+        condition: service_healthy
     volumes:
-      - ./result:/usr/local/app
+      - src/result:/usr/local/app
     ports:
       - "8081:80"
       - "127.0.0.1:9229:9229"
@@ -42,19 +38,19 @@ services:
 
   worker:
     build:
-      context: ./worker
+      context: src/worker
     depends_on:
       redis:
-        condition: service_healthy 
+        condition: service_healthy
       db:
-        condition: service_healthy 
+        condition: service_healthy
     networks:
       - back-tier
 
   redis:
     image: redis:alpine
     volumes:
-      - "./healthchecks:/healthchecks"
+      - "src/healthchecks:/healthchecks"
     healthcheck:
       test: /healthchecks/redis.sh
       interval: "5s"
@@ -68,22 +64,18 @@ services:
       POSTGRES_PASSWORD: "postgres"
     volumes:
       - "db-data:/var/lib/postgresql/data"
-      - "./healthchecks:/healthchecks"
+      - "src/healthchecks:/healthchecks"
     healthcheck:
       test: /healthchecks/postgres.sh
       interval: "5s"
     networks:
       - back-tier
-
-  # this service runs once to seed the database with votes
-  # it won't run unless you specify the "seed" profile
-  # docker compose --profile seed up -d
   seed:
-    build: ./seed-data
+    build: src/seed-data
     profiles: ["seed"]
     depends_on:
       vote:
-        condition: service_healthy 
+        condition: service_healthy
     networks:
       - front-tier
     restart: "no"

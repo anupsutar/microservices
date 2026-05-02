@@ -15,11 +15,11 @@ spec:
         app: vote
     spec:
       containers:
-      - image: dockersamples/examplevotingapp_vote
-        name: vote
-        ports:
-        - containerPort: 80
+        - image: dockersamples/examplevotingapp_vote
           name: vote
+          ports:
+            - containerPort: 80
+              name: vote
 ---
 apiVersion: v1
 kind: Service
@@ -30,9 +30,9 @@ metadata:
 spec:
   type: NodePort
   ports:
-  - name: "vote-service"
-    port: 8080
-    targetPort: 80
-    nodePort: 31000
+    - name: vote
+      port: 8080
+      targetPort: 80
+      nodePort: 31000
   selector:
     app: vote
