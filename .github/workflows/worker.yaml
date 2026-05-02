@@ -74,7 +74,7 @@ jobs:
       - name: Run Trivy vulnerability scanner
         env:
           ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
-          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY_VOTE }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY_WORKER }}
           IMAGE_TAG: ${{ github.sha }}
         uses: aquasecurity/trivy-action@master
         with:
