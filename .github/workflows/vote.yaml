@@ -2,9 +2,9 @@ name: Python CI/CD to AWS ECR
 
 on:
   push:
-    paths: ["vote/**"]
+    paths: ["src/vote/**"]
   pull_request:
-    paths: ["vote/**"]
+    paths: ["src/vote/**"]
 
 env:
   AWS_REGION: us-east-1
@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./vote
+        working-directory: src/vote
 
     steps:
       - name: Checkout code
@@ -70,7 +70,7 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
         run: |
           echo "Building Docker image..."
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG vote/
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG src/vote/.
 
           echo "Pushing Docker image to ECR..."
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
