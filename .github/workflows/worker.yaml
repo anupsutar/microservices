@@ -1,19 +1,15 @@
-name: Python CI/CD to AWS ECR
+name: .NET CI/CD to AWS ECR
 
 on:
   push:
     paths:
-      - "src/vote/**"
-      - ".github/workflows/vote.yaml"
+      - "src/worker/**"
+      - ".github/workflows/worker.yaml"
 
   pull_request:
     paths:
-      - "src/vote/**"
-      - ".github/workflows/vote.yaml"
-
-env:
-  AWS_REGION: us-east-1
-  ECR_REPOSITORY: vote
+      - "src/worker/**"
+      - ".github/workflows/worker.yaml"
 
 jobs:
   # ---------------------------------------------------
@@ -24,26 +20,19 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: src/vote
-
+        working-directory: src/worker
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v4
         with:
-          python-version: "3.11"
-          cache: "pip"
-
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-          pip install pytest
-
-      - name: Run tests
-        run: |
-          pytest
+          dotnet-version: 7.0.x
+      - name: Restore dependencies
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --no-restore
+      - name: Test
+        run: dotnet test --no-build --verbosity normal
 
   # ---------------------------------------------------
   # JOB 2: Build Docker Image and Push to ECR
@@ -63,7 +52,6 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -72,11 +60,11 @@ jobs:
       - name: Build, tag, test, and push image to Amazon ECR
         env:
           ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
-          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY_VOTE }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY_WORKER }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
           echo "Building Docker image..."
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG src/vote/.
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG src/worker/.
 
           echo "Pushing Docker image to ECR..."
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
